@@ -1,0 +1,1 @@
+drop table if exists `image_tag_vote_logs`;

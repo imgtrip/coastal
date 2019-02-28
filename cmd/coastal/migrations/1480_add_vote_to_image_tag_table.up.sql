@@ -1,0 +1,2 @@
+ALTER TABLE `image_tag`
+  ADD `vote_up` INT UNSIGNED DEFAULT 0 NOT NULL;

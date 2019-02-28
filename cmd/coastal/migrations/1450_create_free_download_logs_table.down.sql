@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS `free_download_logs`;

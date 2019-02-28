@@ -1,0 +1,25 @@
+stages:
+  - build
+  - test
+  - deploy
+
+before_script:
+  - apt-get update -qq && apt-get install -y -qq sqlite3 libsqlite3-dev nodejs
+  - ruby -v
+  - which ruby
+
+user_unit_test:
+  stage: test
+  script:
+
+img_unit_test:
+  stage: test
+  script:
+
+log_unit_test:
+  stage: test
+  script:
+
+ts_unit_test:
+  stage: test
+  script:

@@ -1,0 +1,33 @@
+# **********************
+# ** DEVELOPMENT ONLY **
+# **********************
+version: "3"
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    command: "--innodb_use_native_aio=0"
+    volumes:
+      - /var/lib/mysql/imgtrip-db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: imgtrip-dev
+#  coastal:
+#    image: local-coastal:latest
+#    ports:
+#      - "9090:9090"
+#    env_file:
+#      - coastal_dev.env
+#    depends_on:
+#      - db
+#    links:
+#      - db
+  adminer:
+    image: adminer
+    ports:
+      - "8306:8080"
+    depends_on:
+      - db
+    links:
+      - db

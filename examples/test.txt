@@ -1,0 +1,1 @@
+git clone https://qskane:Qi6sSpN9VvgN5FVUoopk@gitlab.com/qskane/imgtrip-config.git

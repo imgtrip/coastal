@@ -1,0 +1,86 @@
+image: docker:stable
+
+services:
+  - docker:dind
+  - mysql:5.7
+
+variables:
+  REPO_NAME: coastal
+  MYSQL_DATABASE: imgtrip-test
+  MYSQL_ROOT_PASSWORD: root
+  CONTAINER_IMAGE: $ALIYUN_REGISTRY_HOST/$CI_PROJECT_PATH
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  COASTAL_NEXT: coastal_next.txt
+  STAGING_TAG: staging-latest
+  PROD_TAG: latest
+
+stages:
+  - test
+  - build
+  - deploy
+
+before_script:
+  - mkdir -p $GOPATH/src/$REPO_NAME
+  - cp -r $CI_PROJECT_DIR/* $GOPATH/src/$REPO_NAME
+  - cd $GOPATH/src/$REPO_NAME
+
+unit_test:
+  image: golang:1.10
+  only:
+    - master
+    - staging
+  stage: test
+  script:
+    - cd test/coastal
+    - go test -db_host=mysql -db_user=root -db_password=root -db_name=imgtrip-test -db_port=3306
+
+build_staging:
+  stage: build
+  only:
+    - staging
+  environment:
+    name: staging
+    url: https://staging.imgtrip.com
+  script:
+    - docker login $ALIYUN_REGISTRY_HOST -u=$ALIYUN_REGISTRY_USER -p=$ALIYUN_REGISTRY_PASSWORD
+    - docker build --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA  .
+    - docker push $CONTAINER_IMAGE:$CI_COMMIT_SHA
+
+deploy_staging:
+  stage: deploy
+  only:
+    - staging
+  script:
+    - apk update  && apk add --no-cache sshpass openssh rsync
+    - export SSHPASS=$STAGING_SERVER_PASSWORD
+    - mkdir ~/.ssh && ssh-keyscan $STAGING_SERVER_HOST >> ~/.ssh/known_hosts
+    - echo $CI_COMMIT_SHA > $COASTAL_NEXT
+    - sshpass -e rsync $COASTAL_NEXT $STAGING_SERVER_USER@$STAGING_SERVER_HOST:$SERVER_IMGTRIP_DIR/$COASTAL_NEXT
+
+build_prod:
+  stage: build
+  only:
+    - master
+  environment:
+    name: prodction
+    url: https://www.imgtrip.com
+  script:
+    - docker login $ALIYUN_REGISTRY_HOST -u=$ALIYUN_REGISTRY_USER -p=$ALIYUN_REGISTRY_PASSWORD
+    - docker build --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CONTAINER_IMAGE:$CI_COMMIT_SHA
+
+deploy_prod:
+  stage: deploy
+  when: manual
+  only:
+    - master
+  environment:
+    name: prodction
+    url: https://www.imgtrip.com
+  script:
+    - apk update  && apk add --no-cache sshpass openssh rsync
+    - export SSHPASS=$PROD_SERVER_PASSWORD
+    - mkdir ~/.ssh && ssh-keyscan $PROD_SERVER_HOST >> ~/.ssh/known_hosts
+    - echo $CI_COMMIT_SHA > $COASTAL_NEXT
+    - sshpass -e rsync $COASTAL_NEXT $PROD_SERVER_USER@$PROD_SERVER_HOST:$SERVER_IMGTRIP_DIR/$COASTAL_NEXT

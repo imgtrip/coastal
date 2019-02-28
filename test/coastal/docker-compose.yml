@@ -1,0 +1,21 @@
+version: "3.0"
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    command: "--innodb_use_native_aio=0"
+    volumes:
+      - /var/lib/mysql/imgtrip-test-db:/var/lib/mysql
+#      - ~/.docker/mysql/imgtrip-test-db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: imgtrip-test
+  adminer:
+    image: adminer
+    ports:
+      - "8306:8080"
+    depends_on:
+      - db
+    links:
+      - db

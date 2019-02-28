@@ -1,0 +1,13 @@
+.idea/
+.vscode/
+
+database/
+
+nohup.out
+Gopkg.lock
+*/vendor/
+*/node_modules/
+*/built/
+package-lock.json
+yarn.lock
+yarn-error.log

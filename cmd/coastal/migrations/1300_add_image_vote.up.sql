@@ -1,0 +1,2 @@
+ALTER TABLE images
+  ADD vote INT DEFAULT 0 NOT NULL;

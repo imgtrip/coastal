@@ -1,0 +1,1 @@
+RENAME TABLE `tag` TO `tags`;

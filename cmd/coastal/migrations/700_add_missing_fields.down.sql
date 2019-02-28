@@ -1,0 +1,18 @@
+ALTER TABLE `albums`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `alubm_images`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `comments`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `download_logs`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `fingerprints`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `images`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `image_sessions`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `users`
+  DROP COLUMN `deleted_at`;
+ALTER TABLE `zoom_logs`
+  DROP COLUMN `deleted_at`;

@@ -1,0 +1,43 @@
+version: "3.0"
+services:
+  user-db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    command: "--innodb_use_native_aio=0"
+    volumes:
+      - ./database/user:/var/lib/mysql
+      - ./user/migrate/migrate.sql:/docker-entrypoint-initdb.d/migrate.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: service_user
+  img-db:
+    image: mysql:5.7
+    ports:
+      - "3307:3306"
+    command: "--innodb_use_native_aio=0"
+    volumes:
+      - ./database/img:/var/lib/mysql
+      - ./img/migrate/migrate.sql:/docker-entrypoint-initdb.d/migrate.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: service_image
+  log-db:
+    image: mysql:5.7
+    ports:
+      - "3308:3306"
+    command: "--innodb_use_native_aio=0"
+    volumes:
+      - ./database/log:/var/lib/mysql
+      - ./log/migrate/migrate.sql:/docker-entrypoint-initdb.d/migrate.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: service_log
+  adminer:
+    image: adminer
+    ports:
+      - "8306:8080"
+    links:
+      - user-db
+      - img-db
+      - log-db

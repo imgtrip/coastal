@@ -1,0 +1,64 @@
+image: docker:stable
+
+services:
+  - docker:dind
+  - mysql:5.7
+
+variables:
+  REPO_NAME: coastal
+  MYSQL_DATABASE: imgtrip-test
+  MYSQL_ROOT_PASSWORD: root
+  CONTAINER_IMAGE: $ALIYUN_REGISTRY_HOST/$CI_PROJECT_PATH
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+
+  COASTAL_NEXT: coastal_next.txt
+  TAG: latest
+
+stages:
+  - test
+  - build
+  - deploy
+
+before_script:
+  - mkdir -p $GOPATH/src/$REPO_NAME
+  - cp -r $CI_PROJECT_DIR/* $GOPATH/src/$REPO_NAME
+  - cd $GOPATH/src/$REPO_NAME
+
+unit_test:
+  image: golang:1.10
+  only:
+    - master
+    - staging
+  stage: test
+  script:
+    - make test
+
+build_prod_app_image:
+  stage: build
+  only:
+    - master
+  environment:
+    name: production
+    url: https://www.imgtrip.com
+  script:
+    - docker login $ALIYUN_REGISTRY_HOST -u=$ALIYUN_REGISTRY_USER -p=$ALIYUN_REGISTRY_PASSWORD
+    - docker pull $CONTAINER_IMAGE:$TAG || true
+    - docker build --cache-from $CONTAINER_IMAGE:$TAG --tag $CONTAINER_IMAGE:$CI_COMMIT_SHA --tag $CONTAINER_IMAGE:$TAG . -f build/docker/coastal/Dockerfile
+    - docker push $CONTAINER_IMAGE:$CI_COMMIT_SHA
+    - docker push $CONTAINER_IMAGE:$TAG
+
+push_to_prod_server:
+  stage: deploy
+  when: manual
+  only:
+    - master
+  environment:
+    name: prodction
+    url: https://www.imgtrip.com
+  script:
+    - apk update  && apk add --no-cache sshpass openssh rsync
+    - export SSHPASS=$PROD_SERVER_PASSWORD
+    - mkdir ~/.ssh && ssh-keyscan $PROD_SERVER_HOST >> ~/.ssh/known_hosts
+    - echo $CI_COMMIT_SHA > $COASTAL_NEXT
+    - sshpass -e rsync $COASTAL_NEXT $PROD_SERVER_USER@$PROD_SERVER_HOST:$PROD_SERVER_DIR/$COASTAL_NEXT
